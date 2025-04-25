@@ -19,6 +19,7 @@ const dataObj = JSON.parse(data);
     output = output.replace(/{%NUTRIENTS%}/g, product.nutrients);
     output = output.replace(/{%QUANTITY%}/g, product.quantity);
     output = output.replace(/{%DESCRIPTION%}/g, product.description);
+    output = output.replace(/{%ID%}/g, product.id);
     if(!product.organic) output = output.replace(/{%NOT_ORGANIC%}/g, 'not-organic');
 
     return output;
@@ -27,10 +28,10 @@ const dataObj = JSON.parse(data);
 
 // Create an HTTP server
 const server = http.createServer((req, res) => {
-    const pathName = req.url;
+    const { query, pathname } = url.parse(req.url, true);
 
     // overview page
-    if(pathName === '/' || pathName === '/overview') {
+    if(pathname === '/' || pathname === '/overview') {
         res.writeHead(200, {'Content-Type': 'text/html'});
         
         const cardsHtml = dataObj.map(el => replaceTemplate(templeteCard, el)).join('');
@@ -38,13 +39,17 @@ const server = http.createServer((req, res) => {
         res.end(output);
 
     // API page
-    }else if(pathName === '/api'){
-        
+    }else if(pathname === '/api'){
+        res.writeHead(200, {'Content-type': 'application/json'});
+          res.end(data);
 
     // Product page
-    } else if(pathName === '/product') {
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end('<h1>Welcome to the Product Page</h1>');
+    } else if(pathname === '/product') {
+        res.writeHead(200, {'Content-type': 'text/html'});
+          const product = dataObj[query.id];
+          const output = replaceTemplate(templeteProduct, product);
+          res.end(output);
+
 
     // Not Found page
     }else {
@@ -54,4 +59,4 @@ const server = http.createServer((req, res) => {
 });
 server.listen(3000, () => {
     console.log('Server is running on port 3000'); 
-});
+}); 
